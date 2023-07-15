@@ -1,6 +1,6 @@
 <?php
 
-namespace app\bot\dto\config;
+namespace app\bot\config;
 
 use app\toolkit\dto\Dto;
 
