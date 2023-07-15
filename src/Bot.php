@@ -22,6 +22,8 @@ abstract class Bot
 
     abstract public function handler();
 
+    abstract public static function getVewPath(string $fileName): string;
+
     public function __construct($configFile = 'telegram')
     {
         /** @var TelegramDto $options */
@@ -73,12 +75,6 @@ abstract class Bot
         }
 
         $this->_bot->sendMessage($userId, $message, 'html', false, null, $keyboard);
-    }
-
-
-    protected static function getVewPath(string $view): string
-    {
-        return COMMON_PATH . '/bots/vacancy/views/' . $view;
     }
 
 
