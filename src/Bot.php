@@ -1,9 +1,10 @@
 <?php
 
-namespace app\common\components;
+namespace app\bot;
 
-use app\common\dto\config\TelegramDto;
-use app\common\services\SettingsService;
+use app\bot\dto\config\TelegramDto;
+use app\toolkit\services\SettingsService;
+use app\toolkit\services\RenderService;
 use TelegramBot\Api\Client;
 use TelegramBot\Api\Types\Message;
 
@@ -28,7 +29,7 @@ abstract class Bot
         $this->_bot = new Client($this->_options->botToken);
     }
 
-    public function getOptions()
+    public function getOptions(): TelegramDto
     {
         return $this->_options;
     }
@@ -54,7 +55,7 @@ abstract class Bot
     }
 
 
-    public function sendMessage($userId, $messageKey, $message = null, array $attributes = [])
+    public function sendMessage($userId, $messageKey, $message = null, array $attributes = []): void
     {
         if (empty($message)) {
             $userLang = null;
@@ -75,7 +76,7 @@ abstract class Bot
     }
 
 
-    protected static function getVewPath(string $view)
+    protected static function getVewPath(string $view): string
     {
         return COMMON_PATH . '/bots/vacancy/views/' . $view;
     }
