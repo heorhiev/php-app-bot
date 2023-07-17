@@ -71,7 +71,7 @@ abstract class Bot
         }
 
         if ($this->_replyKeyboardMarkup) {
-            $keyboard = new \TelegramBot\Api\Types\ReplyKeyboardMarkup($this->_replyKeyboardMarkup, true, false, true);
+            $keyboard = new \TelegramBot\Api\Types\ReplyKeyboardMarkup($this->_replyKeyboardMarkup, true, true, true);
         }
 
         $this->_bot->sendMessage($userId, $message, 'html', false, null, $keyboard);
