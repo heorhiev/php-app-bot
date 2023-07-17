@@ -24,11 +24,11 @@ abstract class Bot
 
     abstract public static function getVewPath(string $fileName): string;
 
-    public function __construct($configFile = 'telegram')
+    public function __construct(string $configFile)
     {
         /** @var TelegramDto $options */
         $this->_options = SettingsService::load($configFile, TelegramDto::class);
-        $this->_bot = new Client($this->_options->botToken);
+        $this->_bot = new Client($this->_options->token);
     }
 
     public function getOptions(): TelegramDto
