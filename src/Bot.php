@@ -3,10 +3,10 @@
 namespace app\bot;
 
 use app\bot\config\TelegramDto;
+use app\toolkit\services\AliasService;
 use app\toolkit\services\SettingsService;
 use app\toolkit\services\RenderService;
 use TelegramBot\Api\Client;
-use TelegramBot\Api\Types\Message;
 
 
 /**
@@ -80,7 +80,7 @@ abstract class Bot
 
     private function getViewContent($messageKey, $attributes, $lang = null): ?string
     {
-        $path = self::getVewPath($messageKey);
+        $path = AliasService::getAlias(static::getVewPath($messageKey));
 
         if ($lang) {
             $langPath = $path . '.' . $lang;
