@@ -3,33 +3,68 @@
 namespace app\bot;
 
 use app\bot\config\TelegramDto;
-use app\toolkit\services\AliasService;
-use app\toolkit\services\SettingsService;
+use app\bot\services\Command;
 use app\toolkit\services\RenderService;
+use app\toolkit\services\SettingsService;
 use TelegramBot\Api\Client;
+use TelegramBot\Api\BotApi;
+use TelegramBot\Api\Types\Update;
+use app\toolkit\services\http\RequestService;
+use app\bot\services\Message;
 
 
-/**
- * @property Client $_bot
- */
 abstract class Bot
 {
     private $_options;
-    private $_bot;
-    private $_inlineKeyboardMarkup;
-    private $_replyKeyboardMarkup;
+    private $_botApi;
+    private $_dataFromRequest;
+    private $_message;
 
 
-    abstract public function handler();
+    abstract public static function getCommands(): array;
 
     abstract public static function getVewPath(string $fileName): string;
 
-    public function __construct(string $configFile)
+
+    public function __construct(string $configFile, $data = null)
     {
         /** @var TelegramDto $options */
         $this->_options = SettingsService::load($configFile, TelegramDto::class);
-        $this->_bot = new Client($this->_options->token);
+        $this->_botApi = new BotApi($this->_options->token);
+
+        if (!$data) {
+            $data = BotApi::jsonValidate(RequestService::raw(), true);
+        }
+
+        $this->_dataFromRequest = Update::fromResponse($data);
     }
+
+
+    public function handler(): void
+    {
+        $command = $this->getMessage()->getCommand();
+
+        $class = static::getCommandHandler($command);
+
+        if ($class) {
+            (new $class($this))->run();
+        }
+    }
+
+
+    public static function getCommandHandler($command): ?Command
+    {
+        $commands = static::getCommands();
+
+        $command = trim($command);
+
+        if ($pos = strpos($command, " ")) {
+            $command = substr($command, 0, $pos);
+        }
+
+        return $commands[$command] ?? null;
+    }
+
 
     public function getOptions(): TelegramDto
     {
@@ -37,50 +72,51 @@ abstract class Bot
     }
 
 
-    public function getBot(): Client
+    public function getBotApi(): BotApi
     {
-        return $this->_bot;
+        return $this->_botApi;
     }
 
 
-    public function setInlineKeyboardMarkup($inlineKeyboardMarkup): self
+    public function getMessage(): Message
     {
-        $this->_inlineKeyboardMarkup = $inlineKeyboardMarkup;
-        return $this;
-    }
-
-
-    public function setReplyKeyboardMarkup($replyKeyboardMarkup): self
-    {
-        $this->_replyKeyboardMarkup = $replyKeyboardMarkup;
-        return $this;
-    }
-
-
-    public function sendMessage($userId, $messageKey, $message = null, array $attributes = []): void
-    {
-        if (empty($message)) {
-            $userLang = null;
-            $message = $this->getViewContent($messageKey, $attributes, $userLang);
+        if (!$this->_message) {
+            $this->_message = new Message($this->_dataFromRequest);
         }
 
-        $keyboard = null;
-
-        if ($this->_inlineKeyboardMarkup) {
-            $keyboard = new \TelegramBot\Api\Types\Inline\InlineKeyboardMarkup($this->_inlineKeyboardMarkup);
-        }
-
-        if ($this->_replyKeyboardMarkup) {
-            $keyboard = new \TelegramBot\Api\Types\ReplyKeyboardMarkup($this->_replyKeyboardMarkup, true, true, true);
-        }
-
-        $this->_bot->sendMessage($userId, $message, 'html', false, null, $keyboard);
+        return $this->_message;
     }
 
 
-    private function getViewContent($messageKey, $attributes, $lang = null): ?string
+    public function sendMessage($messageKey, array $attributes = [], $keyboard = null, $acceptEdit = true)
     {
-        $path = AliasService::getAlias(static::getVewPath($messageKey));
+        $message = static::getViewContent($messageKey, $attributes);
+
+        if ($acceptEdit && $this->getMessage()->isEdited()) {
+            return $this->getBotApi()->editMessageText(
+                $this->getMessage()->getChatid(),
+                $this->getMessage()->getId(),
+                $message,
+                'HTML',
+                true,
+                $keyboard
+            );
+        } else {
+            return $this->getBotApi()->sendMessage(
+                $this->getMessage()->getChatid(),
+                $message,
+                'HTML',
+                true,
+                null,
+                $keyboard
+            );
+        }
+    }
+
+
+    public static function getViewContent($messageKey, $attributes, $lang = null): ?string
+    {
+        $path = COMMON_PATH . '/bots/vacancy/views/' . $messageKey;
 
         if ($lang) {
             $langPath = $path . '.' . $lang;
