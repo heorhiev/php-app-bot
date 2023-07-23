@@ -13,6 +13,9 @@ class Message
     private $_keyboard = [];
     private $_lang;
 
+    private $_messageView;
+    private $_attributes;
+
 
     public function __construct(TelegramDto $options)
     {
@@ -40,9 +43,17 @@ class Message
     }
 
 
-    public function getContent(string $messageView, array $attributes = []): ?string
+    public function setContent(string $messageView, array $attributes = []): Message
     {
-        $path = AliasService::getAlias($this->_options->viewDirectory . '/' . $messageView);
+        $this->_messageView = $messageView;
+        $this->_attributes = $attributes;
+        return $this;
+    }
+
+
+    public function getRenderedContent(): ?string
+    {
+        $path = AliasService::getAlias($this->_options->viewDirectory . '/' . $this->_messageView);
 
         if ($this->_lang) {
             $langPath = $path . '.' . $this->_lang;
@@ -52,6 +63,6 @@ class Message
             }
         }
 
-        return RenderService::get($path, $attributes);
+        return RenderService::get($path, $this->_attributes);
     }
 }

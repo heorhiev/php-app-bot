@@ -19,8 +19,6 @@ abstract class Bot
 
     abstract public static function getCommands(): array;
 
-    abstract public static function getVewPath(string $fileName): string;
-
 
     public function __construct(string $configFile, $data = null)
     {
@@ -90,7 +88,7 @@ abstract class Bot
             return $this->getBotApi()->editMessageText(
                 $this->getIncomeMessage()->getChatid(),
                 $this->getIncomeMessage()->getId(),
-                $message->getContent(),
+                $message->getRenderedContent(),
                 'HTML',
                 true,
                 $message->getKeyboard()
@@ -98,7 +96,7 @@ abstract class Bot
         } else {
             return $this->getBotApi()->sendMessage(
                 $this->getIncomeMessage()->getChatid(),
-                $message,
+                $message->getRenderedContent(),
                 'HTML',
                 true,
                 null,
