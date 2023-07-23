@@ -2,22 +2,21 @@
 
 namespace app\bot\models;
 
+use app\bot\config\TelegramDto;
+use app\toolkit\services\AliasService;
 use app\toolkit\services\RenderService;
 
 
 class Message
 {
-    private $_viewFile;
-    private $_attributes;
-    private $_lang;
+    private $_options;
     private $_keyboard = [];
+    private $_lang;
 
 
-    public function __construct(string $viewFile, array $attributes = [], string $lang = null)
+    public function __construct(TelegramDto $options)
     {
-        $this->_viewFile = $viewFile;
-        $this->_attributes = $attributes;
-        $this->_lang = $lang;
+        $this->_options = $options;
     }
 
 
@@ -34,9 +33,16 @@ class Message
     }
 
 
-    public function getContent(): ?string
+    public function setLang(string $lang): Message
     {
-        $path = $this->_viewFile;
+        $this->_lang = $lang;
+        return $this;
+    }
+
+
+    public function getContent(string $messageView, array $attributes = []): ?string
+    {
+        $path = AliasService::getAlias($this->_options->viewDirectory . '/' . $messageView);
 
         if ($this->_lang) {
             $langPath = $path . '.' . $this->_lang;
@@ -46,6 +52,6 @@ class Message
             }
         }
 
-        return RenderService::get($path, $this->_attributes);
+        return RenderService::get($path, $attributes);
     }
 }
