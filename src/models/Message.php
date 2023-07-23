@@ -23,9 +23,9 @@ class Message
     }
 
 
-    public function setKeyboard(array $keyboard): Message
+    public function setReplyKeyboardMarkup(array $buttons): Message
     {
-        $this->_keyboard = $keyboard;
+        $this->_keyboard = new \TelegramBot\Api\Types\ReplyKeyboardMarkup($buttons, true, true, true);
         return $this;
     }
 
@@ -43,9 +43,15 @@ class Message
     }
 
 
-    public function setContent(string $messageView, array $attributes = []): Message
+    public function setMessageView(string $messageView): Message
     {
         $this->_messageView = $messageView;
+        return $this;
+    }
+
+
+    public function setAttributes(array $attributes = []): Message
+    {
         $this->_attributes = $attributes;
         return $this;
     }

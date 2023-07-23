@@ -7,7 +7,7 @@ class IncomeMessage
 {
     private $id;
     private $callbackId;
-    private $chatId;
+    private $chat;
     private $command;
     private $params;
     private $userName;
@@ -33,11 +33,6 @@ class IncomeMessage
         return $this->callbackId;
     }
 
-    public function getChatId()
-    {
-        return $this->chatId;
-    }
-
     public function getCommand()
     {
         return $this->command;
@@ -46,11 +41,6 @@ class IncomeMessage
     public function getParams()
     {
         return $this->params;
-    }
-
-    public function getUsername()
-    {
-        return $this->userName;
     }
 
     public function isCallbackQuery()
@@ -63,11 +53,25 @@ class IncomeMessage
         return $this->isCallbackQuery;
     }
 
+    public function getChat()
+    {
+        return $this->chat;
+    }
+
+    public function getSenderFullName(): string
+    {
+        return trim($this->getChat()->getFirstName() . ' ' . $this->getChat()->getLastName());
+    }
+
+    public function getSenderId(): int
+    {
+        return $this->getChat()->getId();
+    }
+
     private function mapMessage($message)
     {
         $this->id = $message->getId();
-        $this->chatId = $message->getChat()->getId();
-        $this->userName = $message->getChat()->getUsername();
+        $this->chat = $message->getChat();
         $this->command = $message->getCommand();
         $this->params = $message->getParams();
     }

@@ -72,6 +72,12 @@ abstract class Bot
     }
 
 
+    public function getMenu(): ?array
+    {
+        return $this->getOptions()->menu;
+    }
+
+
     public function getIncomeMessage(): IncomeMessage
     {
         if (!$this->_incomeMessage) {
@@ -86,7 +92,7 @@ abstract class Bot
     {
         if ($acceptEdit && $this->getIncomeMessage()->isEdited()) {
             return $this->getBotApi()->editMessageText(
-                $this->getIncomeMessage()->getChatid(),
+                $this->getIncomeMessage()->getSenderId(),
                 $this->getIncomeMessage()->getId(),
                 $message->getRenderedContent(),
                 'HTML',
@@ -95,7 +101,7 @@ abstract class Bot
             );
         } else {
             return $this->getBotApi()->sendMessage(
-                $this->getIncomeMessage()->getChatid(),
+                $this->getIncomeMessage()->getSenderId(),
                 $message->getRenderedContent(),
                 'HTML',
                 true,

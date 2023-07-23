@@ -29,6 +29,6 @@ abstract class Command extends Service
 
     public function getUserId(): int
     {
-        return $this->getBot()->getMessage()->getChatId();
+        return $this->getBot()->getIncomeMessage()->getSenderId();
     }
 }

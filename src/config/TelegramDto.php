@@ -11,4 +11,5 @@ class TelegramDto extends Dto
     public $token;
     public $buttons;
     public $viewDirectory;
+    public $menu;
 }
