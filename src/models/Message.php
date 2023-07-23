@@ -36,7 +36,7 @@ class Message
 
     public function getContent(): ?string
     {
-        $path = COMMON_PATH . '/bots/vacancy/views/' . $this->_viewFile;
+        $path = $this->_viewFile;
 
         if ($this->_lang) {
             $langPath = $path . '.' . $this->_lang;

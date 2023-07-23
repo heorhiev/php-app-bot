@@ -4,11 +4,9 @@ namespace app\bot;
 
 use app\bot\config\TelegramDto;
 use app\toolkit\services\SettingsService;
-use TelegramBot\Api\Client;
-use TelegramBot\Api\BotApi;
-use TelegramBot\Api\Types\Update;
 use app\toolkit\services\http\RequestService;
 use app\bot\models\{IncomeMessage, Message, Command};
+use TelegramBot\Api\{Client, BotApi, Types\Update};
 
 
 abstract class Bot
@@ -44,7 +42,7 @@ abstract class Bot
 
         $class = static::getCommandHandler($command);
 
-        if ($class) {
+        if ($class instanceof Command) {
             (new $class($this))->run();
         }
     }
