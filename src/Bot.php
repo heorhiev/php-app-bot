@@ -3,14 +3,12 @@
 namespace app\bot;
 
 use app\bot\config\TelegramDto;
-use app\bot\services\Command;
-use app\toolkit\services\RenderService;
 use app\toolkit\services\SettingsService;
 use TelegramBot\Api\Client;
 use TelegramBot\Api\BotApi;
 use TelegramBot\Api\Types\Update;
 use app\toolkit\services\http\RequestService;
-use app\bot\services\Message;
+use app\bot\models\{IncomeMessage, Message, Command};
 
 
 abstract class Bot
@@ -18,7 +16,7 @@ abstract class Bot
     private $_options;
     private $_botApi;
     private $_dataFromRequest;
-    private $_message;
+    private $_incomeMessage;
 
 
     abstract public static function getCommands(): array;
@@ -42,7 +40,7 @@ abstract class Bot
 
     public function handler(): void
     {
-        $command = $this->getMessage()->getCommand();
+        $command = $this->getIncomeMessage()->getCommand();
 
         $class = static::getCommandHandler($command);
 
@@ -78,54 +76,36 @@ abstract class Bot
     }
 
 
-    public function getMessage(): Message
+    public function getIncomeMessage(): IncomeMessage
     {
-        if (!$this->_message) {
-            $this->_message = new Message($this->_dataFromRequest);
+        if (!$this->_incomeMessage) {
+            $this->_incomeMessage = new IncomeMessage($this->_dataFromRequest);
         }
 
-        return $this->_message;
+        return $this->_incomeMessage;
     }
 
 
-    public function sendMessage($messageKey, array $attributes = [], $keyboard = null, $acceptEdit = true)
+    public function sendMessage(Message $message, $acceptEdit = true)
     {
-        $message = static::getViewContent($messageKey, $attributes);
-
-        if ($acceptEdit && $this->getMessage()->isEdited()) {
+        if ($acceptEdit && $this->getIncomeMessage()->isEdited()) {
             return $this->getBotApi()->editMessageText(
-                $this->getMessage()->getChatid(),
-                $this->getMessage()->getId(),
-                $message,
+                $this->getIncomeMessage()->getChatid(),
+                $this->getIncomeMessage()->getId(),
+                $message->getContent(),
                 'HTML',
                 true,
-                $keyboard
+                $message->getKeyboard()
             );
         } else {
             return $this->getBotApi()->sendMessage(
-                $this->getMessage()->getChatid(),
+                $this->getIncomeMessage()->getChatid(),
                 $message,
                 'HTML',
                 true,
                 null,
-                $keyboard
+                $message->getKeyboard()
             );
         }
-    }
-
-
-    public static function getViewContent($messageKey, $attributes, $lang = null): ?string
-    {
-        $path = COMMON_PATH . '/bots/vacancy/views/' . $messageKey;
-
-        if ($lang) {
-            $langPath = $path . '.' . $lang;
-
-            if (RenderService::exists($langPath)) {
-                $path = $langPath;
-            }
-        }
-
-        return RenderService::get($path, $attributes);
     }
 }

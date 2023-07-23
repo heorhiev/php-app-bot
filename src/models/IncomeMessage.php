@@ -1,11 +1,9 @@
 <?php
 
-namespace app\bot\services;
-
-use app\toolkit\services\Service;
+namespace app\bot\models;
 
 
-class Message extends Service
+class IncomeMessage
 {
     private $id;
     private $callbackId;

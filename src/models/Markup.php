@@ -1,6 +1,6 @@
 <?php
 
-namespace app\bot\services;
+namespace app\bot\models;
 
 use app\toolkit\services\Service;
 
