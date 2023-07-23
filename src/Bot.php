@@ -34,7 +34,7 @@ abstract class Bot
     }
 
 
-    public function handler(): void
+    public function run(): void
     {
         $command = $this->getIncomeMessage()->getCommand();
 

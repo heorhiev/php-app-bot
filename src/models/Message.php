@@ -30,6 +30,13 @@ class Message
     }
 
 
+    public function setInlineKeyboardMarkup(array $buttons): Message
+    {
+        $this->_keyboard = new \TelegramBot\Api\Types\Inline\InlineKeyboardMarkup($buttons);
+        return $this;
+    }
+
+
     public function getKeyboard(): array
     {
         return $this->_keyboard;
