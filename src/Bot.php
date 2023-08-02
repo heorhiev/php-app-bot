@@ -5,8 +5,8 @@ namespace app\bot;
 use app\bot\config\TelegramDto;
 use app\toolkit\services\SettingsService;
 use app\toolkit\services\http\RequestService;
-use app\bot\models\{IncomeMessage, Message, Command};
-use TelegramBot\Api\{Client, BotApi, Types\Update};
+use app\bot\models\{IncomeMessage, Message};
+use TelegramBot\Api\{BotApi, Types\Update};
 
 
 abstract class Bot
@@ -36,27 +36,30 @@ abstract class Bot
 
     public function run(): void
     {
-        $command = $this->getIncomeMessage()->getCommand();
+        $class = $this->getCommandHandler($this->getIncomeMessage()->getCommand());
 
-        $class = static::getCommandHandler($command);
-
-        if ($class instanceof Command) {
-            (new $class($this))->run();
+        if (!$class) {
+            $class = $this->getTextHandler($this->getIncomeMessage()->getText());
         }
+
+        (new $class($this))->run();
     }
 
 
-    public static function getCommandHandler($command): ?Command
+    public function getCommandHandler($command)
     {
         $commands = static::getCommands();
-
-        $command = trim($command);
-
-        if ($pos = strpos($command, " ")) {
-            $command = substr($command, 0, $pos);
-        }
-
         return $commands[$command] ?? null;
+    }
+
+
+    public function getTextHandler($text)
+    {
+        foreach ($this->getMenu() as $command => $menuText) {
+            if ($text == $menuText) {
+                return $this->getCommandHandler($command);
+            }
+        }
     }
 
 
@@ -69,6 +72,12 @@ abstract class Bot
     public function getBotApi(): BotApi
     {
         return $this->_botApi;
+    }
+
+
+    public function getDataFromRequest(): Update
+    {
+        return $this->_dataFromRequest;
     }
 
 
@@ -88,11 +97,37 @@ abstract class Bot
     }
 
 
-    public function sendMessage(Message $message, $acceptEdit = true)
+    public function getUserId(): int
     {
+        return $this->getIncomeMessage()->getSenderId();
+    }
+
+
+    public function getNewMessage(): Message
+    {
+        return (new Message($this->getOptions()))->setRecipientId($this->getUserId());
+    }
+
+
+    public function answerCallbackQuery($text = '', $popup = false)
+    {
+        $this->getBotApi()->answerCallbackQuery(
+            $this->getIncomeMessage()->getCallbackId(),
+            $text,
+            $popup
+        );
+    }
+
+
+    public function sendMessage(Message $message, $acceptEdit = false, $closeCallback = true)
+    {
+        if ($closeCallback && $this->getIncomeMessage()->isCallbackQuery()) {
+            $this->answerCallbackQuery();
+        }
+
         if ($acceptEdit && $this->getIncomeMessage()->isEdited()) {
             return $this->getBotApi()->editMessageText(
-                $this->getIncomeMessage()->getSenderId(),
+                $message->getRecipientId(),
                 $this->getIncomeMessage()->getId(),
                 $message->getRenderedContent(),
                 'HTML',
@@ -100,13 +135,15 @@ abstract class Bot
                 $message->getKeyboard()
             );
         } else {
-            return $this->getBotApi()->sendMessage(
-                $this->getIncomeMessage()->getSenderId(),
+            $this->getBotApi()->sendMessage(
+                $message->getRecipientId(),
                 $message->getRenderedContent(),
                 'HTML',
                 true,
                 null,
-                $message->getKeyboard()
+                $message->getKeyboardMarkup(),
+                false,
+                $message->getMessageThreadId()
             );
         }
     }

@@ -10,11 +10,13 @@ use app\toolkit\services\RenderService;
 class Message
 {
     private $_options;
-    private $_keyboard = [];
+    private $_keyboardMarkup;
     private $_lang;
-
+    private $_recipientId;
+    private $_messageThreadId;
     private $_messageView;
-    private $_attributes;
+    private $_messageText;
+    private $_attributes = [];
 
 
     public function __construct(TelegramDto $options)
@@ -23,23 +25,42 @@ class Message
     }
 
 
-    public function setReplyKeyboardMarkup(array $buttons): Message
+    public function getRecipientId(): ?int
     {
-        $this->_keyboard = new \TelegramBot\Api\Types\ReplyKeyboardMarkup($buttons, true, true, true);
+        return $this->_recipientId;
+    }
+
+
+    public function setRecipientId($recipientId): self
+    {
+        $this->_recipientId = $recipientId;
         return $this;
     }
 
 
-    public function setInlineKeyboardMarkup(array $buttons): Message
+    public function getMessageThreadId(): ?int
     {
-        $this->_keyboard = new \TelegramBot\Api\Types\Inline\InlineKeyboardMarkup($buttons);
+        return $this->_messageThreadId;
+    }
+
+
+    public function setMessageThreadId(int $messageThreadId): Message
+    {
+        $this->_messageThreadId = $messageThreadId;
         return $this;
     }
 
 
-    public function getKeyboard(): array
+    public function setKeyboardMarkup($keyboardMarkup): Message
     {
-        return $this->_keyboard;
+        $this->_keyboardMarkup = $keyboardMarkup;
+        return $this;
+    }
+
+
+    public function getKeyboardMarkup()
+    {
+        return $this->_keyboardMarkup;
     }
 
 
@@ -50,9 +71,16 @@ class Message
     }
 
 
-    public function setMessageView(string $messageView): Message
+    public function setMessageView(string $view): Message
     {
-        $this->_messageView = $messageView;
+        $this->_messageView = $view;
+        return $this;
+    }
+
+
+    public function setMessageText(string $text): Message
+    {
+        $this->_messageText = $text;
         return $this;
     }
 
@@ -66,16 +94,22 @@ class Message
 
     public function getRenderedContent(): ?string
     {
-        $path = AliasService::getAlias($this->_options->viewDirectory . '/' . $this->_messageView);
+        $content = $this->_messageText;
 
-        if ($this->_lang) {
-            $langPath = $path . '.' . $this->_lang;
+        if (!$content) {
+            $path = AliasService::getAlias($this->_options->viewDirectory . '/' . $this->_messageView);
 
-            if (RenderService::exists($langPath)) {
-                $path = $langPath;
+            if ($this->_lang) {
+                $langPath = $path . '.' . $this->_lang;
+
+                if (RenderService::exists($langPath)) {
+                    $path = $langPath;
+                }
             }
+
+            $content = RenderService::get($path, $this->_attributes);
         }
 
-        return RenderService::get($path, $this->_attributes);
+        return $content;
     }
 }
