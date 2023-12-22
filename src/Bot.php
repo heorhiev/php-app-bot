@@ -42,6 +42,12 @@ abstract class Bot
             $class = $this->getTextHandler($this->getIncomeMessage()->getText());
         }
 
+        if ($class) {
+            $this->storeCommand($class);
+        } else {
+            $class = $this->getStoredCommand();
+        }
+
         (new $class($this))->run();
     }
 
@@ -100,6 +106,18 @@ abstract class Bot
     public function getUserId(): int
     {
         return $this->getIncomeMessage()->getSenderId();
+    }
+
+
+    public function getStoredCommand(): ?string
+    {
+        return null;
+    }
+
+
+    public function storeCommand($command): bool
+    {
+        return false;
     }
 
 
